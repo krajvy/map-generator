@@ -195,7 +195,7 @@ function downloadHeightData {
 		exit 1
 	fi
 
-	local cmd="phyghtmap --polygon=${POLY_FILE} --output-prefix=${DIR_TMP}/${MAP_NAME} --source=${HEIGHT_FORMAT} --pbf --jobs=2 --step=10 --line-cat=100,50 --start-node-id=20000000000 --start-way-id=10000000000 --write-timestamp --max-nodes-per-tile=0 --hgtdir=${DIR_TMP}/hgt"
+	local cmd="phyghtmap --polygon=${POLY_FILE} --output-prefix=${DIR_TMP}/${MAP_NAME} --source=${HEIGHT_FORMAT} --pbf --jobs=${WORKERS} --step=10 --line-cat=100,50 --no-zero-contour --start-node-id=20000000000 --start-way-id=10000000000 --write-timestamp --max-nodes-per-tile=0 --hgtdir=${DIR_TMP}/hgt"
 
 	logPrint "Downloading height data: ${cmd}"
 
