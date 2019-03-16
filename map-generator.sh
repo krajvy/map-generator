@@ -28,6 +28,7 @@ DIR_OUT='maps'
 TAG_CONF_FILE='conf/tag-mapping.xml'
 HEIGHT_FORMAT='view3'
 MAP_PREFIX=''
+WORKERS=2
 
 # For logging and debugging
 TIME_START=$(date +%s.%N)
@@ -52,6 +53,10 @@ while [[ $# -gt 0 ]]; do
 			;;
 		-f|--height-format)
 			HEIGHT_FORMAT=${2}
+			shift # past argument
+			;;
+		-w|--workers)
+			WORKERS=${2}
 			shift # past argument
 			;;
 		-x|--prefix)
@@ -83,6 +88,11 @@ while [[ $# -gt 0 ]]; do
 			echo "     Height format that is passed to phyghtmap and merged to map."
 			echo "     default: 'view3'"
 			echo "     available: 'srtm1', 'srtm3', 'view1' and 'view3'"
+			echo ""
+			echo -e "\e[1m-w <number>\e[0m"
+			echo -e "\e[1m--workers <number>\e[0m"
+			echo "     How many workers (cores) do we want to work"
+			echo "     default: 2"
 			echo ""
 			echo -e "\e[1m-x <prefix>\e[0m"
 			echo -e "\e[1m--prefix <prefix>\e[0m"
@@ -222,7 +232,7 @@ function mergeMapAndHeight {
 		exit 1
 	fi
 
-	local cmd="osmosis --rb file=${MAP_NAME_COMPLETE} --sort-0.6 --rb ${HEIGHT_FILE} --sort-0.6 --merge --wb ${MAP_NAME_MERGE}"
+	local cmd="osmosis --read-pbf-fast file=${MAP_NAME_COMPLETE} workers=${WORKERS} --sort-0.6 --read-pbf-fast ${HEIGHT_FILE} workers=${WORKERS} --sort-0.6 --merge --write-pbf ${MAP_NAME_MERGE}"
 
 	logPrint "Merging height data with map: ${cmd}"
 
