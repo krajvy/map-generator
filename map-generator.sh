@@ -70,7 +70,7 @@ while [[ $# -gt 0 ]]; do
 			echo ""
 			echo -e "\e[1m-p <file>\e[0m"
 			echo -e "\e[1m--polygon <file>\e[0m"
-			echo "     Polygon file which will extract submap from downloaded map data. This file can be downloaded from https://osm.wno-edv-service.de/boundaries/"
+			echo "     Polygon file which will extract submap from downloaded map data. This file can be downloaded from https://wambachers-osm.website/boundaries/"
 			echo "     example: 'conf/Prague.poly'"
 			echo ""
 			echo -e "\e[1m-t <file>\e[0m"
