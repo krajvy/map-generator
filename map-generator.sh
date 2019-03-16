@@ -215,7 +215,7 @@ function completeMapByPolygon {
 		exit 1
 	fi
 
-	local cmd="osmconvert ${MAP_NAME_TMP} -B=${POLY_FILE} --verbose --complete-ways --complex-ways -o=${MAP_NAME_COMPLETE}"
+	local cmd="osmconvert ${MAP_NAME_TMP} -B=${POLY_FILE} --verbose --complete-ways --complete-multipolygons --complete-boundaries --out-pbf -o=${MAP_NAME_COMPLETE}"
 
 	logPrint "Completing map by polygon: ${cmd}"
 
