@@ -249,7 +249,7 @@ function generateFinalMap {
 		exit 1
 	fi
 
-	local cmd="osmosis --read-pbf file=${MAP_NAME_MERGE} --buffer --mapfile-writer file=${MAP_NAME_FINAL} type=hd  tag-conf-file=${TAG_CONF_FILE}"
+	local cmd="osmosis --read-pbf-fast file=${MAP_NAME_MERGE} workers=${WORKERS} --buffer --sort --mapfile-writer file=${MAP_NAME_FINAL} type=hd  tag-conf-file=${TAG_CONF_FILE}"
 
 	logPrint "Generating final map: ${cmd}"
 
