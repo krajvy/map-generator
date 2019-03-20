@@ -146,14 +146,17 @@ function logClear {
 
 # Download function
 function download {
-	if [ "x$1" = "x" ] || [ "x$2" = "x" ]; then
+	local URL=$1
+	local FILE=$2
+
+	if [ "x${URL}" = "x" ] || [ "x${FILE}" = "x" ]; then
 		lerr 'Not enough parameters for downloading! Nothing to do...'
 		exit 1
 	fi
 
-	local cmd="wget -c ${1} -O ${2}"
+	local cmd="wget -c ${URL} -O ${FILE}"
 
-	linf "Downloading ${1} to ${2}"
+	linf "Downloading ${URL} to ${FILE}"
 	logPrint "Downloading: ${cmd}"
 
 	eval $cmd
@@ -163,59 +166,96 @@ function download {
 
 # Download main map data from OSM
 function downloadMap {
+	local URL=$1
+	local FILE=$2
+
 	linf "Download map data..."
 
-	if [ -z $MAP_URL ]; then
+	if [ -z $URL ]; then
 		lerr "Map URL not set! Nothing to do..."
 		exit 1
 	fi
 
 	# Download desired file in the first way
-	download "${MAP_URL}" "${MAP_NAME_TMP}"
+	download "${URL}" "${FILE}"
 
-	if [ ! -e $MAP_NAME_TMP ]; then
+	if [ "x${FILE}" == "x" ] || [ ! -e $FILE ]; then
 		lerr "Can't download map data!"
 		exit 1
 	fi
 
 	logPrint "Download of map data complete"
 }
-# Download height data for given polygon of map
-function downloadHeightData {
-	linf "Download height data..."
+
+# Download file with borders polygon
+function downloadPolygon {
+	local URL=$1
+	local FILE=$2
+
+	if [ "x${FILE}" == "x" ] || [ -f $FILE ]; then
+		linf "Polygon file already exists, skipping download"
+		return 0
+	fi
+	
+	linf "Download polygon file..."
 
 	# If polygon URL is set
-	if [ "x${POLY_URL}" != "x" ]; then
+	if [ "x${URL}" != "x" ]; then
 		# Download desired file if is set URL
-		download "${POLY_URL}" "${POLY_FILE}"
+		download "${URL}" "${FILE}"
 	fi
 
-	if [ ! -f $POLY_FILE ]; then
-		lerr "Can't get height data - missing POLY_FILE!"
+	if [ ! -e $FILE ]; then
+		lerr "Can't download polygon file!"
 		exit 1
 	fi
 
-	local cmd="phyghtmap --polygon=${POLY_FILE} --output-prefix=${DIR_TMP}/${MAP_NAME} --source=${HEIGHT_FORMAT} --pbf --jobs=${WORKERS} --step=10 --line-cat=100,50 --no-zero-contour --start-node-id=20000000000 --start-way-id=10000000000 --write-timestamp --max-nodes-per-tile=0 --hgtdir=${DIR_TMP}/hgt"
+	logPrint "Download of polygon file complete"
+}
+
+# Download height data for given polygon of map
+function downloadHeightData {
+	local POLYGON=$1
+	local NAME=$2
+
+	linf "Download height data..."
+
+	if [ "x${POLYGON}" == "x" ] || [ ! -f $POLYGON ]; then
+		lerr "Can't get height data - missing polygon file!"
+		exit 1
+	fi
+	if [ "x${NAME}" == "x" ]; then
+		lerr "Can't get height data - not enough parameters!"
+		exit 1
+	fi
+
+	local cmd="phyghtmap --polygon=${POLYGON} --output-prefix=${DIR_TMP}/${NAME} --source=${HEIGHT_FORMAT} --pbf --jobs=${WORKERS} --step=10 --line-cat=100,50 --no-zero-contour --start-node-id=20000000000 --start-way-id=10000000000 --write-timestamp --max-nodes-per-tile=0 --hgtdir=${DIR_TMP}/hgt"
 
 	logPrint "Downloading height data: ${cmd}"
 
 	eval $cmd
 
-	HEIGHT_FILE=$(find $DIR_TMP -type f -name ${MAP_NAME}"_*.osm.pbf" -print)
-
 	logPrint "Download of height data complete"
-	logPrint "Height file name: ${HEIGHT_FILE}"
 }
+
 # Complete map by given polygon - especially complete cross-border ways or clip submap
 function completeMapByPolygon {
+	local POLYGON=$1
+	local MAP_IN=$2
+	local MAP_OUT=$3
+
 	linf "Complete map by given polygon..."
 
-	if [ ! -f $POLY_FILE ]; then
-		lerr "Can't complete map - missing POLY_FILE"
+	if [ "x${POLYGON}" == "x" ] || [ ! -f $POLYGON ]; then
+		lerr "Can't complete map - missing polygon file!"
+		exit 1
+	fi
+	if [ "x${MAP_IN}" == "x" ] || [ "x${MAP_OUT}" == "x" ]; then
+		lerr "Can't complete map - not enough parameters!"
 		exit 1
 	fi
 
-	local cmd="osmconvert ${MAP_NAME_TMP} -B=${POLY_FILE} --verbose --complete-ways --complete-multipolygons --complete-boundaries --out-pbf -o=${MAP_NAME_COMPLETE}"
+	local cmd="osmconvert ${MAP_IN} -B=${POLYGON} --verbose --complete-ways --complete-multipolygons --complete-boundaries --out-pbf -o=${MAP_OUT}"
 
 	logPrint "Completing map by polygon: ${cmd}"
 
@@ -223,16 +263,25 @@ function completeMapByPolygon {
 
 	logPrint "Completing map by polygon complete"
 }
+
 # Merge map with its height data
 function mergeMapAndHeight {
+	local HEIGHT=$1
+	local MAP_IN=$2
+	local MAP_OUT=$3
+
 	linf "Merge height data with actual map..."
 
-	if [ ! -e $HEIGHT_FILE ]; then
-		lerr "Can't merge height file with map - missing HEIGHT_FILE!"
+	if [ "x${HEIGHT}" == "x" ] || [ ! -e $HEIGHT ]; then
+		lerr "Can't merge height file with map - missing height file!"
+		exit 1
+	fi
+	if [ "x${MAP_IN}" == "x" ] || [ "x${MAP_OUT}" == "x" ]; then
+		lerr "Can't merge height file with map - not enough parameters!"
 		exit 1
 	fi
 
-	local cmd="osmosis --read-pbf-fast file=${MAP_NAME_COMPLETE} workers=${WORKERS} --sort-0.6 --read-pbf-fast ${HEIGHT_FILE} workers=${WORKERS} --sort-0.6 --merge --write-pbf ${MAP_NAME_MERGE}"
+	local cmd="osmosis --read-pbf-fast file=${MAP_IN} workers=${WORKERS} --sort-0.6 --read-pbf-fast ${HEIGHT} workers=${WORKERS} --sort-0.6 --merge --write-pbf ${MAP_OUT}"
 
 	logPrint "Merging height data with map: ${cmd}"
 
@@ -240,16 +289,20 @@ function mergeMapAndHeight {
 
 	logPrint "Merge height data complete"
 }
+
 # Generate output map and display what is defined in TAG_CONF_FILE
 function generateFinalMap {
+	local MAP_IN=$1
+	local MAP_OUT=$2
+
 	linf "Generating final map..."
 
-	if [ ! -e $MAP_NAME_MERGE ]; then
+	if [ "x${MAP_OUT}" == "x" ] || [ "x${MAP_IN}" == "x" ] || [ ! -e $MAP_IN ]; then
 		lerr "Can't generate final map!"
 		exit 1
 	fi
 
-	local cmd="osmosis --read-pbf-fast file=${MAP_NAME_MERGE} workers=${WORKERS} --buffer --sort --mapfile-writer file=${MAP_NAME_FINAL} type=hd  tag-conf-file=${TAG_CONF_FILE}"
+	local cmd="osmosis --read-pbf-fast file=${MAP_IN} workers=${WORKERS} --buffer --sort --mapfile-writer file=${MAP_OUT} type=hd  tag-conf-file=${TAG_CONF_FILE}"
 
 	logPrint "Generating final map: ${cmd}"
 
@@ -280,15 +333,20 @@ logPrint "Map complete file name: ${MAP_NAME_COMPLETE}"
 logPrint "Map output name: ${MAP_NAME_FINAL}"
 
 # Download map data
-downloadMap
+downloadMap "${MAP_URL}" "${MAP_NAME_TMP}"
+# Download border file
+downloadPolygon "${POLY_URL}" "${POLY_FILE}"
 # Download height data for map
-downloadHeightData
+downloadHeightData "${POLY_FILE}" "${MAP_NAME}"
+# Get height file
+HEIGHT_FILE=$(find $DIR_TMP -type f -name ${MAP_NAME}"_*.osm.pbf" -print)
+logPrint "Height file name: ${HEIGHT_FILE}"
 # Complete cross-border ways or clip submap from map
-completeMapByPolygon
+completeMapByPolygon "${POLY_FILE}" "${MAP_NAME_TMP}" "${MAP_NAME_COMPLETE}"
 # Merge downloaded map and computed height data
-mergeMapAndHeight
+mergeMapAndHeight "${HEIGHT_FILE}" "${MAP_NAME_COMPLETE}" "${MAP_NAME_MERGE}"
 # Generate output map with all data
-generateFinalMap
+generateFinalMap "${MAP_NAME_MERGE}" "${MAP_NAME_FINAL}"
 # Clean generated stuff from HD
 #cleanAfter
 
