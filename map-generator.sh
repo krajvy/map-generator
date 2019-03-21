@@ -30,6 +30,7 @@ HEIGHT_FORMAT='view3'
 MAP_PREFIX=''
 WORKERS=2
 CONTOUR=1
+SET_JAVA_HEAP=8
 
 # For logging and debugging
 TIME_START=$(date +%s.%N)
@@ -63,6 +64,9 @@ while [[ $# -gt 0 ]]; do
 			WORKERS=${2}
 			shift # past argument
 			;;
+		-J|--skip-java-heap)
+			SET_JAVA_HEAP=0
+			;;
 		-x|--prefix)
 			MAP_PREFIX=${2}
 			shift # past argument
@@ -90,6 +94,10 @@ while [[ $# -gt 0 ]]; do
 			echo -e "\e[1m-S <file>\e[0m"
 			echo -e "\e[1m--skip-contour-lines\e[0m"
 			echo "     Skip processing contour lines into map. Generating should be faster"
+			echo ""
+			echo -e "\e[1m-J <file>\e[0m"
+			echo -e "\e[1m--skip-java-heap\e[0m"
+			echo "     Skip setting JAVA heap size for bigger maps"
 			echo ""
 			echo -e "\e[1m-f <format>\e[0m"
 			echo -e "\e[1m--height-format <format>\e[0m"
@@ -151,6 +159,14 @@ function logPrint {
 function logClear {
 	echo '' > $LOG_FILE
 }
+
+# Set JAVA heap if needed
+if [ $SET_JAVA_HEAP -gt 0 ]; then
+	linf "Setting JAVA heap to ${SET_JAVA_HEAP}G"
+	export JAVACMD_OPTIONS=-Xmx${SET_JAVA_HEAP}G
+else
+	linf "Skipping set of JAVA heap..."
+fi
 
 # Download function
 function download {
