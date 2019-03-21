@@ -29,6 +29,7 @@ TAG_CONF_FILE='conf/tag-mapping.xml'
 HEIGHT_FORMAT='view3'
 MAP_PREFIX=''
 WORKERS=2
+CONTOUR=1
 
 # For logging and debugging
 TIME_START=$(date +%s.%N)
@@ -50,6 +51,9 @@ while [[ $# -gt 0 ]]; do
 		-t|--tag-conf-file)
 			TAG_CONF_FILE=${2}
 			shift # past argument
+			;;
+		-S|--skip-contour-lines)
+			CONTOUR=0
 			;;
 		-f|--height-format)
 			HEIGHT_FORMAT=${2}
@@ -82,6 +86,10 @@ while [[ $# -gt 0 ]]; do
 			echo -e "\e[1m--tag-conf-file <file>\e[0m"
 			echo "     XML file with definition what will be displayed in final map."
 			echo "     default: '${TAG_CONF_FILE}'"
+			echo ""
+			echo -e "\e[1m-S <file>\e[0m"
+			echo -e "\e[1m--skip-contour-lines\e[0m"
+			echo "     Skip processing contour lines into map. Generating should be faster"
 			echo ""
 			echo -e "\e[1m-f <format>\e[0m"
 			echo -e "\e[1m--height-format <format>\e[0m"
@@ -336,15 +344,24 @@ logPrint "Map output name: ${MAP_NAME_FINAL}"
 downloadMap "${MAP_URL}" "${MAP_NAME_TMP}"
 # Download border file
 downloadPolygon "${POLY_URL}" "${POLY_FILE}"
-# Download height data for map
-downloadHeightData "${POLY_FILE}" "${MAP_NAME}"
-# Get height file
-HEIGHT_FILE=$(find $DIR_TMP -type f -name ${MAP_NAME}"_*.osm.pbf" -print)
-logPrint "Height file name: ${HEIGHT_FILE}"
-# Complete cross-border ways or clip submap from map
-completeMapByPolygon "${POLY_FILE}" "${MAP_NAME_TMP}" "${MAP_NAME_COMPLETE}"
-# Merge downloaded map and computed height data
-mergeMapAndHeight "${HEIGHT_FILE}" "${MAP_NAME_COMPLETE}" "${MAP_NAME_MERGE}"
+if [ $CONTOUR == 1 ]; then
+	# Download height data for map
+	downloadHeightData "${POLY_FILE}" "${MAP_NAME}"
+	# Get height file
+	HEIGHT_FILE=$(find $DIR_TMP -type f -name ${MAP_NAME}"_*.osm.pbf" -print)
+	logPrint "Height file name: ${HEIGHT_FILE}"
+	# Complete cross-border ways or clip submap from map
+	completeMapByPolygon "${POLY_FILE}" "${MAP_NAME_TMP}" "${MAP_NAME_COMPLETE}"
+	# Merge downloaded map and computed height data
+	mergeMapAndHeight "${HEIGHT_FILE}" "${MAP_NAME_COMPLETE}" "${MAP_NAME_MERGE}"
+else
+	linf "Skipping contour processing..."
+	logPrint "Skipping contour processing..."
+	# Complete cross-border ways or clip submap from map
+	completeMapByPolygon "${POLY_FILE}" "${MAP_NAME_TMP}" "${MAP_NAME_COMPLETE}"
+	# set variable for generating final map
+	MAP_NAME_MERGE=$MAP_NAME_COMPLETE
+fi
 # Generate output map with all data
 generateFinalMap "${MAP_NAME_MERGE}" "${MAP_NAME_FINAL}"
 # Clean generated stuff from HD
