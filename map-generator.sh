@@ -91,11 +91,11 @@ while [[ $# -gt 0 ]]; do
 			echo "     XML file with definition what will be displayed in final map."
 			echo "     default: '${TAG_CONF_FILE}'"
 			echo ""
-			echo -e "\e[1m-S <file>\e[0m"
+			echo -e "\e[1m-S\e[0m"
 			echo -e "\e[1m--skip-contour-lines\e[0m"
 			echo "     Skip processing contour lines into map. Generating should be faster"
 			echo ""
-			echo -e "\e[1m-J <file>\e[0m"
+			echo -e "\e[1m-J\e[0m"
 			echo -e "\e[1m--skip-java-heap\e[0m"
 			echo "     Skip setting JAVA heap size for bigger maps"
 			echo ""
@@ -115,6 +115,11 @@ while [[ $# -gt 0 ]]; do
 			echo "     Name for final output map."
 			echo "     example: 'cz-prague'"
 			echo "     default name will be same as map name from URL"
+			echo ""
+			echo -e "\e[1m-h\e[0m"
+			echo -e "\e[1m--help\e[0m"
+			echo "     Display this help"
+			echo ""
 			exit 0
 			;;
 	esac
