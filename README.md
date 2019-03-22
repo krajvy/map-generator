@@ -135,6 +135,10 @@ This will set number of dedicated threads for computing. Less should be slower, 
 
 When this parameter is ommitted, default 2 will be used.
 
+### -h ; --help
+
+This will display command line help.
+
 ## Example command
 
 Download latest map for Czech Republic; clip from it only Prague region; don't add contour lines; skip setting JAVA heap size; set 4 threads for computing.
