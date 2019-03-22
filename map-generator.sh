@@ -184,6 +184,9 @@ function download {
 	logPrint "Downloading: ${cmd}"
 
 	eval $cmd
+	
+	linf "Download ${URL} to ${FILE} done."
+	logPrint "Download ${URL} to ${FILE} done."
 }
 
 # Process functions
