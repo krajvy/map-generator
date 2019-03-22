@@ -27,7 +27,7 @@ DIR_TMP='tmp'
 DIR_OUT='maps'
 TAG_CONF_FILE='conf/tag-mapping.xml'
 HEIGHT_FORMAT='view3'
-MAP_PREFIX=''
+MAP_NAME_OUT=''
 WORKERS=2
 CONTOUR=1
 SET_JAVA_HEAP=8
@@ -67,8 +67,8 @@ while [[ $# -gt 0 ]]; do
 		-J|--skip-java-heap)
 			SET_JAVA_HEAP=0
 			;;
-		-x|--prefix)
-			MAP_PREFIX=${2}
+		-n|--name)
+			MAP_NAME_OUT=${2}
 			shift # past argument
 			;;
 		-h|--help|*)
@@ -110,26 +110,32 @@ while [[ $# -gt 0 ]]; do
 			echo "     How many workers (cores) do we want to work"
 			echo "     default: ${WORKERS}"
 			echo ""
-			echo -e "\e[1m-x <prefix>\e[0m"
-			echo -e "\e[1m--prefix <prefix>\e[0m"
-			echo "     Prefix of generated files for better orientation in folders."
-			echo "     example: 'cz-'"
+			echo -e "\e[1m-n <name>\e[0m"
+			echo -e "\e[1m--name <name>\e[0m"
+			echo "     Name for final output map."
+			echo "     example: 'cz-prague'"
+			echo "     default name will be same as map name from URL"
 			exit 0
 			;;
 	esac
 	shift # past argument or value
 done
 
-# poly url should be generated from map url (without -latest.osm.pbf)
-
 # Set other needed variables
-MAP_NAME="${MAP_PREFIX}"$(basename ${MAP_URL} .osm.pbf)
+
+MAP_NAME=$(basename ${MAP_URL} .osm.pbf)
 # Map name can now end with -latest - strip it out
 MAP_NAME="${MAP_NAME%-latest}"
+
+# When no output map name was given as parameter
+if [ -z $MAP_NAME_OUT ]; then
+	MAP_NAME_OUT=$MAP_NAME
+fi
+
 MAP_NAME_TMP="${DIR_TMP}/${MAP_NAME}.osm.pbf"
 MAP_NAME_COMPLETE="${DIR_TMP}/${MAP_NAME}.complete.pbf"
 MAP_NAME_MERGE="${DIR_TMP}/${MAP_NAME}.merge.pbf"
-MAP_NAME_FINAL="${DIR_OUT}/${MAP_NAME}.map"
+MAP_NAME_FINAL="${DIR_OUT}/${MAP_NAME_OUT}.map"
 
 # If polygon file hasn't been attached by parameter
 if [ ! -f $POLY_FILE ] || [ "x${POLY_FILE}" = "x" ]; then
@@ -137,12 +143,12 @@ if [ ! -f $POLY_FILE ] || [ "x${POLY_FILE}" = "x" ]; then
 	POLY_URL="${MAP_URL%.osm.pbf}"
 	# Poly URL can now end with -latest
 	POLY_URL="${POLY_URL%-latest}.poly"
-	POLY_FILE="${DIR_TMP}/${MAP_PREFIX}"$(basename "${POLY_URL}")
+	POLY_FILE="${DIR_TMP}/"$(basename "${POLY_URL}")
 fi
 
 HEIGHT_FILE=""
 
-LOG_FILE="${DIR_OUT}/${MAP_NAME}.log"
+LOG_FILE="${DIR_OUT}/${MAP_NAME_OUT}.log"
 
 # Output formating functions
 function linf {

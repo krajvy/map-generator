@@ -103,6 +103,12 @@ Polygon file have to be in `poly` format and can be generated and downloaded fro
 
 When this parameter is ommitted, default polygon file will be downloaded for whole source map.
 
+### -m <name> ; --name <name>
+
+Set output map name.
+
+When this parameter is ommitted, default name will be same as map name form URL.
+
 ### -t <file> ; --tag-conf-file <file>
 
 Manually set tags definition which should be displayed in final map.
