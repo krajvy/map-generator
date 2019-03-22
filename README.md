@@ -179,3 +179,8 @@ To avoid problems with dependecies, it is planned to try out Docker. I'm little 
 *   [Osmconvert](https://wiki.openstreetmap.org/wiki/Osmconvert)
 *   [Osmosis](https://wiki.openstreetmap.org/wiki/Osmosis)
 *   [Mapwriter plugin](https://github.com/mapsforge/mapsforge/blob/master/docs/Getting-Started-Map-Writer.md)
+*   [Adding height data (in Czech)](https://osm.paws.cz/srtm.php)
+*   [Create own map for Android (in Czech)](http://osm.jasnapaka.com/tvorba-mapy.php)
+*   [OpenAndroMaps - ready basic maps](https://www.openandromaps.org/en)
+*   [Vector maps for Locus (in Czech)](https://www.pslib.cz/milan.kerslager/Vektorov%C3%A9_mapy_pro_Locus)
+*   [Offline maps for Android (in Czech)](https://osm.paws.cz/) - IMHO the best tourist maps for Czech Republic and surrounding states.
